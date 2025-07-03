@@ -160,12 +160,99 @@ Authorization: Bearer <jwt_token>
 
 ---
 
-## Notes
-- Both endpoints require JSON request bodies.
-- The `password` must be at least 6 characters long.
-- The `email` must be a valid email address.
-- The `firstname` is required and must be at least 3 characters long for registration.
-- The `lastname` is optional for registration.
-- Protected endpoints (profile and logout) require a valid JWT token.
-- Tokens are automatically invalidated after logout.
+# Driver Endpoints Documentation
+
+## 1. Register Driver
+
+### Endpoint
+`POST /drivers/register`
+
+### Description
+Registers a new driver in the system. Validates input including vehicle information, creates a driver account, and returns the driver data.
+
+### Request Body
+```json
+{
+  "fullname": {
+    "firstname": "<string, required>",
+    "lastname": "<string, optional>"
+  },
+  "email": "<valid email>",
+  "password": "<string, min 6 chars>",
+  "vehicle": {
+    "color": "<string, required>",
+    "numberplate": "<string, min 4 chars>",
+    "capacity": "<number, min 2>",
+    "vehicleType": "car" | "bike" | "Auto-Rickshaw" | "bus"
+  }
+}
+```
+
+#### Example
+```json
+{
+  "fullname": {
+    "firstname": "John",
+    "lastname": "Smith"
+  },
+  "email": "john.smith@example.com",
+  "password": "secret123",
+  "vehicle": {
+    "color": "Black",
+    "numberplate": "ABC123",
+    "capacity": 4,
+    "vehicleType": "car"
+  }
+}
+```
+
+### Validation Rules
+- First name is required
+- Email must be valid format
+- Password must be at least 6 characters
+- Vehicle color is required
+- Vehicle number plate must be at least 4 characters
+- Vehicle capacity must be at least 2
+- Vehicle type must be one of: "car", "bike", "Auto-Rickshaw", "bus"
+
+### Responses
+- **201 Created**: Returns driver object with vehicle details
+  ```json
+  {
+    "driver": {
+      "_id": "<driver_id>",
+      "fullname": {
+        "firstname": "John",
+        "lastname": "Smith"
+      },
+      "email": "john.smith@example.com",
+      "vehicle": {
+        "color": "Black",
+        "numberplate": "ABC123",
+        "capacity": 4,
+        "vehicleType": "car"
+      }
+    }
+  }
+  ```
+- **400 Bad Request**: Validation errors
+  ```json
+  {
+    "errors": [
+      {
+        "msg": "Vehicle capacity must be at least 2",
+        "param": "vehicle.capacity",
+        "location": "body"
+      }
+      // ...other validation errors
+    ]
+  }
+  ```
+- **500 Internal Server Error**: Server error
+
+### Notes
+- All vehicle information is required for driver registration
+- Vehicle type is restricted to predefined options
+- Vehicle capacity must be appropriate for the vehicle type
+- Email must be unique in the system
 

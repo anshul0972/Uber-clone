@@ -6,6 +6,7 @@ const cookieparser = require("cookie-parser");
 
 const connectToDb=require("./db/db");
 const userRoutes=require("./Routers/user_router");
+const driverRoutes=require("./Routers/Driver_routes");
 
 connectToDb();
 
@@ -21,6 +22,7 @@ app.get("/",(req,res)=>{
 });
 
 app.use("/users",userRoutes);
+app.use("/drivers",driverRoutes);
 
 
 
