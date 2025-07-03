@@ -171,88 +171,219 @@ Authorization: Bearer <jwt_token>
 Registers a new driver in the system. Validates input including vehicle information, creates a driver account, and returns the driver data.
 
 ### Request Body
-```json
+```jsonc
 {
   "fullname": {
-    "firstname": "<string, required>",
-    "lastname": "<string, optional>"
+    "firstname": "John", // required, string
+    "lastname": "Smith"  // optional, string
   },
-  "email": "<valid email>",
-  "password": "<string, min 6 chars>",
+  "email": "john.smith@example.com", // required, valid email, unique
+  "password": "secret123",           // required, string, min 6 chars
   "vehicle": {
-    "color": "<string, required>",
-    "numberplate": "<string, min 4 chars>",
-    "capacity": "<number, min 2>",
-    "vehicleType": "car" | "bike" | "Auto-Rickshaw" | "bus"
+    "color": "Black",                // required, string
+    "numberplate": "ABC123",         // required, string, min 4 chars
+    "capacity": 4,                    // required, integer, min 2
+    "vehicleType": "car"             // required, one of: "car", "bike", "Auto-Rickshaw", "bus"
   }
 }
 ```
 
-#### Example
-```json
+### Success Response
+- **201 Created**
+```jsonc
 {
-  "fullname": {
-    "firstname": "John",
-    "lastname": "Smith"
-  },
-  "email": "john.smith@example.com",
-  "password": "secret123",
-  "vehicle": {
-    "color": "Black",
-    "numberplate": "ABC123",
-    "capacity": 4,
-    "vehicleType": "car"
-  }
-}
-```
-
-### Validation Rules
-- First name is required
-- Email must be valid format
-- Password must be at least 6 characters
-- Vehicle color is required
-- Vehicle number plate must be at least 4 characters
-- Vehicle capacity must be at least 2
-- Vehicle type must be one of: "car", "bike", "Auto-Rickshaw", "bus"
-
-### Responses
-- **201 Created**: Returns driver object with vehicle details
-  ```json
-  {
-    "driver": {
-      "_id": "<driver_id>",
-      "fullname": {
-        "firstname": "John",
-        "lastname": "Smith"
-      },
-      "email": "john.smith@example.com",
-      "vehicle": {
-        "color": "Black",
-        "numberplate": "ABC123",
-        "capacity": 4,
-        "vehicleType": "car"
-      }
+  "token": "<jwt_token>",
+  "driver": {
+    "_id": "<driver_id>",
+    "fullname": {
+      "firstname": "John",
+      "lastname": "Smith"
+    },
+    "email": "john.smith@example.com",
+    "vehicle": {
+      "color": "Black",
+      "numberplate": "ABC123",
+      "capacity": 4,
+      "vehicleType": "car"
     }
+    // ...other driver fields
   }
-  ```
-- **400 Bad Request**: Validation errors
-  ```json
-  {
-    "errors": [
-      {
-        "msg": "Vehicle capacity must be at least 2",
-        "param": "vehicle.capacity",
-        "location": "body"
-      }
-      // ...other validation errors
-    ]
+}
+```
+
+### Error Responses
+- **400 Bad Request** (validation or duplicate email)
+```jsonc
+{
+  "errors": [
+    {
+      "msg": "Vehicle capacity must be at least 2", // example error message
+      "param": "vehicle.capacity",
+      "location": "body"
+    }
+    // ...other validation errors
+  ]
+}
+```
+Or
+```jsonc
+{
+  "message": "Driver already exists with this email"
+}
+```
+- **500 Internal Server Error**
+```jsonc
+{
+  "error": "Internal server error"
+}
+```
+
+---
+
+## 2. Login Driver
+
+### Endpoint
+`POST /drivers/login`
+
+### Description
+Authenticates a driver with email and password. Returns a JWT token and driver data on success.
+
+### Request Body
+```jsonc
+{
+  "email": "john.smith@example.com", // required, valid email
+  "password": "secret123"            // required, string
+}
+```
+
+### Success Response
+- **200 OK**
+```jsonc
+{
+  "token": "<jwt_token>",
+  "driver": {
+    "_id": "<driver_id>",
+    "fullname": {
+      "firstname": "John",
+      "lastname": "Smith"
+    },
+    "email": "john.smith@example.com",
+    "vehicle": {
+      "color": "Black",
+      "numberplate": "ABC123",
+      "capacity": 4,
+      "vehicleType": "car"
+    }
+    // ...other driver fields
   }
-  ```
+}
+```
+
+### Error Responses
+- **400 Bad Request** (validation or invalid credentials)
+```jsonc
+{
+  "errors": [
+    {
+      "msg": "Invalid email format", // example error message
+      "param": "email",
+      "location": "body"
+    }
+    // ...other validation errors
+  ]
+}
+```
+Or
+```jsonc
+{
+  "message": "Invalid email and password"
+}
+```
+- **500 Internal Server Error**
+```jsonc
+{
+  "error": "Internal server error"
+}
+```
+
+---
+
+## 3. Get Driver Profile
+
+### Endpoint
+`GET /drivers/profile`
+
+### Description
+Retrieves the profile information of the currently authenticated driver.
+
+### Authentication
+Requires a valid JWT token in the Authorization header:
+```
+Authorization: Bearer <jwt_token>
+```
+
+### Success Response
+- **200 OK**
+```jsonc
+{
+  "driver": {
+    "_id": "<driver_id>",
+    "fullname": {
+      "firstname": "John",
+      "lastname": "Smith"
+    },
+    "email": "john.smith@example.com",
+    "vehicle": {
+      "color": "Black",
+      "numberplate": "ABC123",
+      "capacity": 4,
+      "vehicleType": "car"
+    }
+    // ...other driver fields
+  }
+}
+```
+
+### Error Responses
+- **401 Unauthorized**: Invalid or missing token
+- **404 Not Found**: Driver not found
 - **500 Internal Server Error**: Server error
 
-### Notes
+---
+
+## 4. Logout Driver
+
+### Endpoint
+`GET /drivers/logout`
+
+### Description
+Logs out the currently authenticated driver by clearing the token cookie and blacklisting the current token.
+
+### Authentication
+Requires a valid JWT token either in cookies or Authorization header:
+```
+Authorization: Bearer <jwt_token>
+```
+
+### Success Response
+- **200 OK**
+```jsonc
+{
+  "message": "Logged out successfully"
+}
+```
+
+### Error Responses
+- **401 Unauthorized**: Invalid or missing token
+- **500 Internal Server Error**: Server error
+
+---
+
+## Notes
 - All vehicle information is required for driver registration
 - Vehicle type is restricted to predefined options
 - Vehicle capacity must be appropriate for the vehicle type
 - Email must be unique in the system
+- Protected endpoints (profile and logout) require a valid JWT token
+- Tokens are automatically invalidated after logout
 

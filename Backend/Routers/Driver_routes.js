@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const driverController = require("../controllers/Driver_conttroller");
 const { body } = require("express-validator");
+const authmiddleware = require("../middleware/auth_middleware"); 
 
 router.post("/register", [
     body("fullname.firstname").notEmpty().withMessage("First name is required"),
@@ -15,4 +16,12 @@ router.post("/register", [
 driverController.registerDriver
 );
 
+router.post("/login", [
+    body("email").isEmail().withMessage("Invalid email format"),
+    body("password").notEmpty().withMessage("Password is required"),
+], driverController.loginDriver);
+
+router.get("/profile",authmiddleware.authDriver,driverController.getDriverProfile);
+
+router.get("/logout", authmiddleware.authDriver, driverController.logoutDriver);
 module.exports = router;
